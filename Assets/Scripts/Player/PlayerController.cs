@@ -1,13 +1,14 @@
 using Cinemachine;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
 
 public class PlayerController : MonoBehaviour
 {
     [Header("Movement settings")]
-    public float moveSpeed = 1.2f;
+    public float moveSpeed = 1.5f;
     [SerializeField] float rotationSpeed = 500f;
 
     [Header("Ground check settings")]
@@ -41,10 +42,17 @@ public class PlayerController : MonoBehaviour
 
     Vector3 moveDir;
     float moveAmount;
+
+    public bool inWater = false, isFloating = false;
+    public bool isUnderwater = false;
+    private int LastWeaponState = 0;
+
+    public LayerMask waterMask;
+
     private void Awake()
     {
         cameraController = Camera.main.GetComponent<CameraController>();
-        
+
         characterController = GetComponent<CharacterController>();
         meeleFighter = GetComponent<MeeleFighter>();
     }
@@ -55,52 +63,68 @@ public class PlayerController : MonoBehaviour
 
         SwapWeapon();
 
-        aimGun(); 
-                
+        aimGun();
+
+        if (!inWater)
+        {
+            GroundMovement();
+        }
+        else
+        {
+            WaterMovement();
+        }
+
+    }
+
+    public void GroundMovement()
+    {
+
+        if (!inWater)
+        {
+            isFloating = false;
+        }
+
         if (meeleFighter.InAction)
         {
             animator.SetFloat("moveAmount", 0f);
             return;
         }
-            
+
         //Player Movements
         float h = Input.GetAxis("Horizontal");
         float v = Input.GetAxis("Vertical");
 
-        if(!isSprinting)
+        if (!isSprinting)
         {
-            moveAmount = Mathf.Clamp((Mathf.Abs(h) + Mathf.Abs(v)),0,0.5f);
+            moveAmount = Mathf.Clamp((Mathf.Abs(h) + Mathf.Abs(v)), 0, 0.5f);
         }
         else
         {
             moveAmount = Mathf.Clamp01(Mathf.Abs(h) + Mathf.Abs(v));
-        }     
-
-             
+        }
 
         var moveInput = (new Vector3(h, 0, v)).normalized;
-               
+
         //Conditions while aiming
-        if(isAiming)
+        if (isAiming)
         {
             moveDir = secondCamera.transform.forward.normalized;
             moveDir.y = 0;
             moveSpeed = 0;
             moveAmount = 0;
             rotationSpeed = 3000f;
-            
+
         }
         else
         {
-            moveDir = cameraController.PlanarRotation * moveInput;            
+            moveDir = cameraController.PlanarRotation * moveInput;
             rotationSpeed = 500f;
-            
         }
-        
+
         //Gravity
         GroundCheck();
 
-        if(isGrounded)
+        if (isGrounded)
         {
             yspeed = -0.5f;
         }
@@ -110,36 +134,148 @@ public class PlayerController : MonoBehaviour
         }
 
         //playerMovement
-        var velocity = moveDir * moveSpeed;        
+        var velocity = moveDir * moveSpeed;
         velocity.y = yspeed;
-        Debug.Log(velocity);
+
         characterController.Move(velocity * Time.deltaTime);
-        
-                
+
         //Player orientation
         if (moveAmount > 0 || isAiming)
         {
             targetRotaion = Quaternion.LookRotation(moveDir);
         }
 
-        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotaion, 
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotaion,
             rotationSpeed * Time.deltaTime);
 
-        animator.SetFloat("moveAmount",moveAmount, 0.1f, Time.deltaTime);
-        
+        animator.SetFloat("moveAmount", moveAmount, 0.1f, Time.deltaTime);
+    }
+
+    public void EnterWater()
+    {
+        inWater = true;
+        LastWeaponState = animator.GetInteger("WeaponState");
+        animator.SetInteger("WeaponState", 4);
+
+    }
+
+    public void ExitWater()
+    {
+        inWater = false;
+        animator.SetInteger("WeaponState", LastWeaponState);
+
+    }
+    void CheckFloat()
+    {
+        //Check floating
+        RaycastHit hit;
+        if (Physics.Raycast(new Vector3(transform.position.x, transform.position.y + 1.8f,
+            transform.position.z), Vector3.down, out hit, Mathf.Infinity, waterMask) &&
+            inWater == true)
+        {
+            Debug.DrawRay(new Vector3(transform.position.x, transform.position.y + 1.8f,
+            transform.position.z), Vector3.down, Color.green);
+            if (hit.distance < 0.2f)
+            {
+                //player is floating
+                isFloating = true;
+                isUnderwater = false;
+                Debug.Log("Player Floating");
+            }
+
+        }
+        else
+        {
+            isFloating = false;
+            isUnderwater = true;
+            Debug.Log("Player Under water");
+        }
+    }
+    void WaterMovement()
+    {
+
+        //activate water movement
+        float h = Input.GetAxis("Horizontal");
+        float v = Input.GetAxis("Vertical");
+        float u = Input.GetAxis("UpDown");
+
+        if (!isSprinting)
+        {
+            moveAmount = Mathf.Clamp(Mathf.Abs(h) + Mathf.Abs(v) + Mathf.Abs(u), 0, 0.5f);
+        }
+        else
+        {
+            moveAmount = Mathf.Clamp01(Mathf.Abs(h) + Mathf.Abs(v) + Mathf.Abs(u));
+        }
+
+        var moveInput = (new Vector3(h, 0, v)).normalized;
+
+        moveDir = cameraController.PlanarRotation * moveInput;
+
+
+        var velocity = moveDir * moveSpeed;
+
+                       
+
+        CheckFloat();
+
+        if (inWater && !isFloating && !isUnderwater)
+        {
+            yspeed += Physics.gravity.y * Time.deltaTime;
+            velocity.y = yspeed;
+        }
+
+
+        if (isFloating)
+        {
+            velocity.y += Mathf.Clamp(u, -1, 0) * Time.deltaTime * moveSpeed * 150f;
+        }
+        else
+        {
+            velocity.y += u * Time.deltaTime * moveSpeed * 150f;
+        }
+
+
+        characterController.Move(velocity * Time.deltaTime);
+
+
+        if (moveAmount > 0 && (moveInput.x != 0 || moveInput.z != 0))
+        {
+            targetRotaion = Quaternion.LookRotation(moveDir);
+        }
+
+
+
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotaion,
+            rotationSpeed * Time.deltaTime);
+        if ((u > 0 && isFloating) || (v!=0 && isFloating) || (h!=0 && isFloating))
+        {
+            if(isSprinting)
+            {
+                moveAmount = 1;
+            }
+            else
+            {
+                moveAmount = 0;
+            }
+            
+        }
+
+
+        animator.SetFloat("moveAmount", moveAmount, 0.1f, Time.deltaTime);
     }
 
     void Sprint()
     {
         if(Input.GetButton("Sprint"))
         {
-            moveSpeed = 3f;
+            moveSpeed = 3.5f;
             isSprinting = true;            
         }
         else
         {
             isSprinting= false;
-            moveSpeed = 1.2f;            
+            moveSpeed = 1.5f;            
         }
     }
     void SwapWeapon()
