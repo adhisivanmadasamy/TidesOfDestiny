@@ -51,35 +51,86 @@ public class PlayerController : MonoBehaviour
 
     public GameObject PoolFloater, OceanFloater;
     public GameObject Floaters;
+
+    public bool inRangeCar = false, inRangeBoat = false, inRangeHeli = false;
+
+    public ControllerManager controllerManager;
+
+    public bool inVehicle;
+
+    public GameObject PSpawnCar;
+    public GameObject PlayerMesh;
+
+    SkinnedMeshRenderer[] skinnedMeshRenderers;
+
     private void Awake()
     {
         cameraController = Camera.main.GetComponent<CameraController>();
 
         characterController = GetComponent<CharacterController>();
         meeleFighter = GetComponent<MeeleFighter>();
+
+        skinnedMeshRenderers = PlayerMesh.GetComponentsInChildren<SkinnedMeshRenderer>();
     }
+
+   
 
     private void Update()
     {
-        Sprint();
-
-        SwapWeapon();
-
-        aimGun();
-
-        if (!inWater)
+        if (!inVehicle)
         {
-            Floaters.SetActive(false);
-            GroundMovement();
+            
+            Sprint();
+
+            SwapWeapon();
+
+            aimGun();
+
+            if (!inWater)
+            {
+                Floaters.SetActive(false);
+                GroundMovement();
+
+                if (inRangeCar)
+                {
+                    if (Input.GetButtonDown("EnterVehicle"))
+                    {
+                        controllerManager.EnterCar();
+                    }
+                }
+            }
+            else
+            {
+                Floaters.SetActive(true);
+                WaterMovement();
+            }
         }
         else
         {
-            Floaters.SetActive(true);
-            WaterMovement();
+            transform.position = PSpawnCar.transform.position;
         }
+        
 
     }
 
+    public void HideChar()
+    {
+        characterController.enabled = false;
+        foreach (SkinnedMeshRenderer smr in skinnedMeshRenderers)
+        {
+            smr.enabled = false;
+        }
+    }
+
+    public void UnhideChar()
+    {
+        characterController.enabled = true;
+        foreach (SkinnedMeshRenderer smr in skinnedMeshRenderers)
+        {
+            smr.enabled = true;
+        }
+        
+    }
     public void GroundMovement()
     {
 
@@ -304,31 +355,7 @@ public class PlayerController : MonoBehaviour
             velocity.y += u * Time.deltaTime * moveSpeed * 150f;
             characterController.Move(velocity * Time.deltaTime);
         }
-        //if(moveInput != Vector3.zero)
-        //{
-        //    if (isFloating)
-        //    {
-        //        velocity.y += Mathf.Clamp(u, -1, 0) * Time.deltaTime * moveSpeed * 150f;
-        //        Floaters.SetActive(false);
-        //    }
-        //    else
-        //    {
-        //        velocity.y += u * Time.deltaTime * moveSpeed * 150f;
-        //        Floaters.SetActive(false);
-        //    }
-
-        //    characterController.Move(velocity * Time.deltaTime);
-        //}
-        //else
-        //{
-        //    if(isFloating)
-        //    {
-        //        Floaters.SetActive(true);
-        //    }
-        //}
-        
-
-
+       
         if (moveAmount > 0 && (moveInput.x != 0 || moveInput.z != 0))
         {
             targetRotaion = Quaternion.LookRotation(moveDir);
