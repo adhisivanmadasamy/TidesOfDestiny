@@ -11,11 +11,14 @@ public class WaterBody : MonoBehaviour
         waterCollider = GetComponent<Collider>();
     }
 
+    
     private void OnTriggerEnter(Collider other)
     {
         if(other.gameObject.tag == "Player")
         {
+            other.gameObject.GetComponent<PlayerController>().WaterTag = this.gameObject.tag;
             other.gameObject.GetComponent<PlayerController>().EnterWater();
+            
         }
     }
 
@@ -23,6 +26,7 @@ public class WaterBody : MonoBehaviour
     {
         if (other.gameObject.tag == "Player")
         {
+            other.gameObject.GetComponent<PlayerController>().WaterTag = this.gameObject.tag;
             other.gameObject.GetComponent<PlayerController>().ExitWater();
         }
     }

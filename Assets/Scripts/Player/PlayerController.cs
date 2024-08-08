@@ -39,7 +39,7 @@ public class PlayerController : MonoBehaviour
     public GameObject GunMesh;
 
     public CinemachineVirtualCamera aimVirtualCamera;
-
+    public string WaterTag;
     Vector3 moveDir;
     float moveAmount;
 
@@ -49,6 +49,8 @@ public class PlayerController : MonoBehaviour
 
     public LayerMask waterMask;
 
+    public GameObject PoolFloater, OceanFloater;
+    public GameObject Floaters;
     private void Awake()
     {
         cameraController = Camera.main.GetComponent<CameraController>();
@@ -67,10 +69,12 @@ public class PlayerController : MonoBehaviour
 
         if (!inWater)
         {
+            Floaters.SetActive(false);
             GroundMovement();
         }
         else
         {
+            Floaters.SetActive(true);
             WaterMovement();
         }
 
@@ -153,43 +157,89 @@ public class PlayerController : MonoBehaviour
 
     public void EnterWater()
     {
+        if (WaterTag == "Pool")
+        {
+            PoolFloater.SetActive(true);
+        }
+        else if (WaterTag == "Ocean")
+        {
+            OceanFloater.SetActive(true);        
+        }
         inWater = true;
         LastWeaponState = animator.GetInteger("WeaponState");
         animator.SetInteger("WeaponState", 4);
+        
 
     }
 
     public void ExitWater()
     {
+        if (WaterTag == "Pool")
+        {
+            PoolFloater.SetActive(true);
+        }
+        else if (WaterTag == "Ocean")
+        {
+            OceanFloater.SetActive(true);
+        }
         inWater = false;
         animator.SetInteger("WeaponState", LastWeaponState);
-
+        
     }
     void CheckFloat()
     {
-        //Check floating
-        RaycastHit hit;
-        if (Physics.Raycast(new Vector3(transform.position.x, transform.position.y + 1.8f,
-            transform.position.z), Vector3.down, out hit, Mathf.Infinity, waterMask) &&
-            inWater == true)
+        if(WaterTag == "Pool")
         {
-            Debug.DrawRay(new Vector3(transform.position.x, transform.position.y + 1.8f,
-            transform.position.z), Vector3.down, Color.green);
-            if (hit.distance < 0.2f)
+            RaycastHit hit;
+            if (Physics.Raycast(new Vector3(transform.position.x, transform.position.y + 1.6f,
+                transform.position.z), Vector3.down, out hit, Mathf.Infinity, waterMask) &&
+                inWater == true)
             {
-                //player is floating
-                isFloating = true;
-                isUnderwater = false;
-                Debug.Log("Player Floating");
-            }
+                Debug.DrawRay(new Vector3(transform.position.x, transform.position.y + 3f,
+                transform.position.z), Vector3.down, Color.green);
+                if (hit.distance < 0.2f)
+                {
+                    //player is floating
+                    isFloating = true;
+                    isUnderwater = false;
+                    Debug.Log("Player Floating");
+                }
 
+            }
+            else
+            {
+                isFloating = false;
+                isUnderwater = true;
+                Debug.Log("Player Under water");
+            }
         }
-        else
+        else if(WaterTag == "Ocean")
         {
-            isFloating = false;
-            isUnderwater = true;
-            Debug.Log("Player Under water");
+            RaycastHit hit;
+            if (Physics.Raycast(new Vector3(transform.position.x, transform.position.y + 2.2f,
+                transform.position.z), Vector3.down, out hit, Mathf.Infinity, waterMask) &&
+                inWater == true)
+            {
+                Debug.DrawRay(new Vector3(transform.position.x, transform.position.y + 3f,
+                transform.position.z), Vector3.down, Color.green);
+                if (hit.distance < 0.3f)
+                {
+                    //player is floating
+                    isFloating = true;
+                    isUnderwater = false;
+                    Debug.Log("Player Floating");
+                }
+
+            }
+            else
+            {
+                isFloating = false;
+                isUnderwater = true;
+                Debug.Log("Player Under water");
+            }
         }
+        
+        
     }
     void WaterMovement()
     {
@@ -223,20 +273,60 @@ public class PlayerController : MonoBehaviour
         {
             yspeed += Physics.gravity.y * Time.deltaTime;
             velocity.y = yspeed;
+            characterController.Move(velocity * Time.deltaTime);
         }
 
-
-        if (isFloating)
+        if(isFloating && inWater && !isUnderwater)
         {
+            Floaters.SetActive(true);
             velocity.y += Mathf.Clamp(u, -1, 0) * Time.deltaTime * moveSpeed * 150f;
+            if (velocity != Vector3.zero) 
+            {
+                characterController.Move(velocity * Time.deltaTime);
+            }
+            
         }
         else
         {
-            velocity.y += u * Time.deltaTime * moveSpeed * 150f;
+            if (WaterTag == "Pool")
+            {
+                PoolFloater.SetActive(true);
+            }
+            else if (WaterTag == "Ocean")
+            {
+                OceanFloater.SetActive(true);
+            }
         }
 
 
-        characterController.Move(velocity * Time.deltaTime);
+        if (inWater && !isFloating && isUnderwater) 
+        {
+            velocity.y += u * Time.deltaTime * moveSpeed * 150f;
+            characterController.Move(velocity * Time.deltaTime);
+        }
+        //if(moveInput != Vector3.zero)
+        //{
+        //    if (isFloating)
+        //    {
+        //        velocity.y += Mathf.Clamp(u, -1, 0) * Time.deltaTime * moveSpeed * 150f;
+        //        Floaters.SetActive(false);
+        //    }
+        //    else
+        //    {
+        //        velocity.y += u * Time.deltaTime * moveSpeed * 150f;
+        //        Floaters.SetActive(false);
+        //    }
+
+        //    characterController.Move(velocity * Time.deltaTime);
+        //}
+        //else
+        //{
+        //    if(isFloating)
+        //    {
+        //        Floaters.SetActive(true);
+        //    }
+        //}
+        
 
 
         if (moveAmount > 0 && (moveInput.x != 0 || moveInput.z != 0))
@@ -248,11 +338,12 @@ public class PlayerController : MonoBehaviour
 
         transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotaion,
             rotationSpeed * Time.deltaTime);
-        if ((u > 0 && isFloating) || (v!=0 && isFloating) || (h!=0 && isFloating))
+
+        if ((u > 0 && isFloating))
         {
             if(isSprinting)
             {
-                moveAmount = 1;
+                moveAmount = 0;
             }
             else
             {
