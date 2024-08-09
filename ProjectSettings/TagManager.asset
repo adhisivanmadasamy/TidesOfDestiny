@@ -10,6 +10,7 @@ TagManager:
   - Pool
   - River
   - Car
+  - Boat
   layers:
   - Default
   - TransparentFX

@@ -59,9 +59,12 @@ public class PlayerController : MonoBehaviour
     public bool inVehicle;
 
     public GameObject PSpawnCar;
+    public GameObject PSpawnBoat;
     public GameObject PlayerMesh;
 
     SkinnedMeshRenderer[] skinnedMeshRenderers;
+
+    public bool inBoat, inCar, inHeli;
 
     private void Awake()
     {
@@ -98,6 +101,14 @@ public class PlayerController : MonoBehaviour
                         controllerManager.EnterCar();
                     }
                 }
+
+                else if (inRangeBoat)
+                {
+                    if (Input.GetButtonDown("EnterVehicle"))
+                    {
+                        controllerManager.EnterBoat();
+                    }
+                }
             }
             else
             {
@@ -107,7 +118,15 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            transform.position = PSpawnCar.transform.position;
+            if(inCar)
+            {
+                transform.position = PSpawnCar.transform.position;
+            }
+            else if(inBoat)
+            {
+                transform.position = PSpawnBoat.transform.position;
+            }
+            
         }
         
 
