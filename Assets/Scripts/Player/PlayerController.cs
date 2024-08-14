@@ -45,7 +45,7 @@ public class PlayerController : MonoBehaviour
 
     public bool inWater = false, isFloating = false;
     public bool isUnderwater = false;
-    private int LastWeaponState = 0;
+    public int LastWeaponState = 0;
 
     public LayerMask waterMask;
 
@@ -60,6 +60,7 @@ public class PlayerController : MonoBehaviour
 
     public GameObject PSpawnCar;
     public GameObject PSpawnBoat;
+    public GameObject PSpawnHeli;
     public GameObject PlayerMesh;
 
     SkinnedMeshRenderer[] skinnedMeshRenderers;
@@ -101,12 +102,18 @@ public class PlayerController : MonoBehaviour
                         controllerManager.EnterCar();
                     }
                 }
-
                 else if (inRangeBoat)
                 {
                     if (Input.GetButtonDown("EnterVehicle"))
                     {
                         controllerManager.EnterBoat();
+                    }
+                }
+                else if (inRangeHeli)
+                {
+                    if (Input.GetButtonDown("EnterVehicle"))
+                    {
+                        controllerManager.EnterHeli();
                     }
                 }
             }
@@ -125,6 +132,11 @@ public class PlayerController : MonoBehaviour
             else if(inBoat)
             {
                 transform.position = PSpawnBoat.transform.position;
+                
+            }
+            else if(inHeli)
+            {
+                transform.position = PSpawnHeli.transform.position;
             }
             
         }
@@ -313,6 +325,13 @@ public class PlayerController : MonoBehaviour
     }
     void WaterMovement()
     {
+        if (inRangeBoat)
+        {
+            if (Input.GetButtonDown("EnterVehicle"))
+            {
+                controllerManager.EnterBoat();
+            }
+        }
 
         //activate water movement
         float h = Input.GetAxis("Horizontal");
@@ -406,7 +425,7 @@ public class PlayerController : MonoBehaviour
     {
         if(Input.GetButton("Sprint"))
         {
-            moveSpeed = 3.5f;
+            moveSpeed = 4f;
             isSprinting = true;            
         }
         else

@@ -6,13 +6,15 @@ using UnityEngine;
 public class ControllerManager : MonoBehaviour
 {
     public GameObject Player;
-    public CinemachineVirtualCamera CarCamera, BoatCamera, HelicopterCamera;
+    public CinemachineVirtualCamera CarCamera, BoatCamera, HeliCamera;
 
     public GameObject PSpawnBoat, PSpawnCar, PSpawnHeli;
 
     public CarController carController;
     public BoatController boatController;
-    //Heli controller
+    public HeliController heliController;
+    
+    public Animator CharAnimator;
 
     public GameObject PlayerMesh;
     public void EnterCar()
@@ -41,9 +43,27 @@ public class ControllerManager : MonoBehaviour
         Player.GetComponent<PlayerController>().inVehicle = true;
         Player.GetComponent<PlayerController>().inBoat = true;
         Player.GetComponent<PlayerController>().HideChar();
+        Player.GetComponent<PlayerController>().inWater = false;
+        Player.GetComponent<PlayerController>().isUnderwater = false;
+        Player.GetComponent<PlayerController>().isFloating = false;
+        CharAnimator.SetInteger("WeaponState",0);
         BoatCamera.gameObject.SetActive(true);
         yield return null;
         boatController.inBoat = true;
+    }
+
+    public void EnterHeli() 
+    {
+        StartCoroutine(EnterHeliFunc());
+    }
+    IEnumerator EnterHeliFunc()
+    {
+        Player.GetComponent<PlayerController>().inVehicle = true;
+        Player.GetComponent<PlayerController>().inHeli = true;
+        Player.GetComponent<PlayerController>().HideChar();
+        HeliCamera.gameObject.SetActive(true);
+        yield return null;
+        heliController.inHeli = true;
     }
     public void ExitCar() 
     {
@@ -74,7 +94,27 @@ public class ControllerManager : MonoBehaviour
         boatController.inBoat=false;
         yield return null;
         Player.GetComponent<PlayerController>().UnhideChar();
-        Player.GetComponent<PlayerController>().inVehicle = false;
+        Player.GetComponent<PlayerController>().inVehicle = false;        
         Player.GetComponent<PlayerController>().inBoat = false;
+        CharAnimator.SetInteger("WeaponState",0 );
+        Player.GetComponent<PlayerController>().inWater = false;
+        Player.GetComponent<PlayerController>().isUnderwater = false;
+        Player.GetComponent<PlayerController>().isFloating = false;
+    }
+
+    public void ExitHeli()
+    {
+        StartCoroutine (ExitHeliFunc());
+    }
+
+    IEnumerator ExitHeliFunc()
+    {
+        HeliCamera.gameObject.SetActive(false);
+        heliController.inHeli = false;
+        yield return null;
+        Player.GetComponent<PlayerController>().UnhideChar();
+        Player.GetComponent<PlayerController>().inVehicle = false;
+        Player.GetComponent<PlayerController>().inHeli = false;
+
     }
 }
