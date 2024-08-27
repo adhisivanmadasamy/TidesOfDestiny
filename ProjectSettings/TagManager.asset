@@ -11,6 +11,14 @@ TagManager:
   - River
   - Car
   - Boat
+  - EnemySimple
+  - PlayerWeapon
+  - EnemyWeapon
+  - EnemyBox
+  - EnemyMelee
+  - PlayerHand
+  - PlayerMelee
+  - EnemyHand
   layers:
   - Default
   - TransparentFX
@@ -23,11 +31,11 @@ TagManager:
   - PostProcessing
   - Not in Reflection
   - GunHit
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Enemy
+  - PlayerWeapon
+  - EnemyWeapon
+  - VisionSensor
+  - Vehicle
   - 
   - 
   - 

@@ -28,8 +28,7 @@ public class BoatController : MonoBehaviour
 
             if (Input.GetButtonDown("EnterVehicle"))
             {
-                controllerManager.ExitBoat();
-                Debug.Log("Pressed F");
+                controllerManager.ExitBoat();                
             }
         }
     }
@@ -50,7 +49,6 @@ public class BoatController : MonoBehaviour
             }
             else
             {
-
                 if (currentSpeed > 0)
                     currentSpeed -= deceleration * Time.deltaTime;
                 else if (currentSpeed < 0)
@@ -63,7 +61,6 @@ public class BoatController : MonoBehaviour
 
             Vector3 movement = transform.forward * currentSpeed * Time.deltaTime;
             rb.MovePosition(rb.position + movement);
-
 
             float turn = turnInput * turnSpeed * Time.deltaTime;
             Quaternion turnRotation = Quaternion.Euler(0f, turn, 0f);

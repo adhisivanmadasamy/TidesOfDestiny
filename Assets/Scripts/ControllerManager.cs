@@ -6,13 +6,14 @@ using UnityEngine;
 public class ControllerManager : MonoBehaviour
 {
     public GameObject Player;
-    public CinemachineVirtualCamera CarCamera, BoatCamera, HeliCamera;
+    public CinemachineVirtualCamera CarCamera, BoatCamera, HeliCamera, TruckCamera;
 
-    public GameObject PSpawnBoat, PSpawnCar, PSpawnHeli;
+    public GameObject PSpawnBoat, PSpawnCar, PSpawnHeli, PSpawnTruck;
 
     public CarController carController;
     public BoatController boatController;
     public HeliController heliController;
+    public TruckController truckController;
     
     public Animator CharAnimator;
 
@@ -32,6 +33,23 @@ public class ControllerManager : MonoBehaviour
         yield return null;
         carController.inCar = true;
         
+    }
+
+    public void EnterTruck()
+    {
+        StartCoroutine(EnterTruckFunc());
+
+    }
+
+    IEnumerator EnterTruckFunc()
+    {
+        Player.GetComponent<PlayerController>().inVehicle = true;
+        Player.GetComponent<PlayerController>().inTruck = true;
+        Player.GetComponent<PlayerController>().HideChar();
+        TruckCamera.gameObject.SetActive(true);
+        yield return null;
+        truckController.inTruck = true;
+
     }
 
     public void EnterBoat()
@@ -78,6 +96,25 @@ public class ControllerManager : MonoBehaviour
         Player.GetComponent <PlayerController>().UnhideChar();
         Player.GetComponent<PlayerController>().inVehicle = false;
         Player.GetComponent<PlayerController>().inCar = false;
+        //Player.GetComponent<PlayerController>().BackToPlayer(PSpawnCar.transform);
+
+        Debug.Log("Executed");
+
+    }
+
+    public void ExitTruck()
+    {
+        StartCoroutine(ExitTruckFunc());
+    }
+    IEnumerator ExitTruckFunc()
+    {
+
+        TruckCamera.gameObject.SetActive(false);
+        truckController.inTruck = false;
+        yield return null;
+        Player.GetComponent<PlayerController>().UnhideChar();
+        Player.GetComponent<PlayerController>().inVehicle = false;
+        Player.GetComponent<PlayerController>().inTruck = false;
         //Player.GetComponent<PlayerController>().BackToPlayer(PSpawnCar.transform);
 
         Debug.Log("Executed");

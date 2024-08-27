@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
-    // Start is called before the first frame update
+    [Header("Camera Controls")]
     [SerializeField] Transform followTarget;
     [SerializeField] float rotationSpeed = 2f;
     [SerializeField] float distance = 5;
@@ -13,21 +13,23 @@ public class CameraController : MonoBehaviour
     [SerializeField] float maxVerticalAngle = 45;
 
     [SerializeField] Vector2 framingOffset;
+    public bool InvertX, InvertY;
 
-
+    //private variables
     float rotationX;
     float rotationY;
-
-    public bool InvertX, InvertY;
+    
     float intervalXVal, intervalYVal;
 
     private void Start()
     {
+        //Hiding the cursor
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
     }
     private void Update()
     {
+        //Cam movement
         intervalXVal = (InvertX ? -1 : 1);
         intervalYVal = (InvertY ? -1 : -1);
 
@@ -44,5 +46,6 @@ public class CameraController : MonoBehaviour
         transform.rotation = targetRotation;
     }
 
+    //To give jus the Y rotation to the player to align in the direction of Cam
     public Quaternion PlanarRotation => Quaternion.Euler(0, rotationY, 0);
 }
